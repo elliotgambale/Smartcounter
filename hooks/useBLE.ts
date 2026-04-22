@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BleManager, Device, Subscription } from 'react-native-ble-plx';
+import Constants from 'expo-constants';
+import { BleManager, Device, Subscription } from 'react-native-ble-plx';
 import { Buffer } from 'buffer';
 import { BLEStatus, RepData } from '../lib/types';
 import {
@@ -8,12 +9,11 @@ import {
   SMART_COUNTER_SERVICE_UUID,
 } from '../lib/bleConstants';
 
-let manager: BleManager | null = null;
+const manager = Constants.appOwnership === 'expo' ? null : new BleManager();
 
-function getManager() {
+function requireManager() {
   if (!manager) {
-    const { BleManager } = require('react-native-ble-plx') as typeof import('react-native-ble-plx');
-    manager = new BleManager();
+    throw new Error('BLE is unavailable in Expo Go. Use a native development build.');
   }
   return manager;
 }
@@ -28,7 +28,7 @@ export function useBLE(onRepReceived: (rep: RepData) => void) {
 
   const stopScan = useCallback(() => {
     try {
-      getManager().stopDeviceScan();
+      requireManager().stopDeviceScan();
     } catch {
       setStatus('error');
     }
@@ -45,7 +45,7 @@ export function useBLE(onRepReceived: (rep: RepData) => void) {
 
     let bleManager: BleManager;
     try {
-      bleManager = getManager();
+      bleManager = requireManager();
     } catch {
       setStatus('error');
       return;
@@ -77,7 +77,7 @@ export function useBLE(onRepReceived: (rep: RepData) => void) {
       setStatus('connecting');
 
       try {
-        getManager().stopDeviceScan();
+        requireManager().stopDeviceScan();
         const connected = await device.connect();
         await connected.discoverAllServicesAndCharacteristics();
         setConnectedDevice(connected);

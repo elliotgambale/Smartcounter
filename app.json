@@ -12,10 +12,7 @@
       "infoPlist": {
         "NSBluetoothAlwaysUsageDescription": "SmartCounter needs Bluetooth to connect to your ESP32 device.",
         "NSBluetoothPeripheralUsageDescription": "SmartCounter needs Bluetooth to connect to your ESP32 device.",
-        "UIBackgroundModes": [
-          "bluetooth-central",
-          "bluetooth-central"
-        ],
+        "UIBackgroundModes": ["bluetooth-central"],
         "ITSAppUsesNonExemptEncryption": false
       }
     },
