@@ -7,6 +7,7 @@ import { useBLE } from '../hooks/useBLE';
 export default function HomeScreen() {
   const router = useRouter();
   const { status, devices, startScan, stopScan, connectToDevice } = useBLE(() => {});
+  const isScanning = status === 'scanning';
 
   const handleConnect = async (device: Device) => {
     await connectToDevice(device);
@@ -15,23 +16,34 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.subtitle}>Find your ESP32 device to begin</Text>
+      <Text style={styles.title}>SmartCounter</Text>
+      <Text style={styles.subtitle}>Connect to your ESP32 counter to begin.</Text>
 
-      <TouchableOpacity
-        style={[styles.scanButton, status === 'scanning' && styles.scanButtonActive]}
-        onPress={status === 'scanning' ? stopScan : startScan}
-      >
-        {status === 'scanning' ? (
-          <ActivityIndicator color="#0a0a0a" />
-        ) : (
-          <Text style={styles.scanButtonText}>
-            {status === 'idle' ? 'Scan for devices' : 'Scan again'}
+      <View style={styles.discoveryPanel}>
+        <View style={styles.discoveryHeader}>
+          <View>
+            <Text style={styles.discoveryTitle}>Bluetooth Discovery</Text>
+            <Text style={styles.discoveryStatus}>
+              {isScanning
+                ? 'Searching for SmartCounter devices...'
+                : `${devices.length} device${devices.length === 1 ? '' : 's'} found`}
+            </Text>
+          </View>
+          {isScanning && <ActivityIndicator color="#e8f542" />}
+        </View>
+
+        <TouchableOpacity
+          style={[styles.scanButton, isScanning && styles.scanButtonActive]}
+          onPress={isScanning ? stopScan : startScan}
+        >
+          <Text style={[styles.scanButtonText, isScanning && styles.scanButtonActiveText]}>
+            {isScanning ? 'Stop Bluetooth Search' : 'Start Bluetooth Search'}
           </Text>
-        )}
-      </TouchableOpacity>
+        </TouchableOpacity>
+      </View>
 
-      {devices.length === 0 && status !== 'scanning' && (
-        <Text style={styles.hint}>No devices found yet. Make sure your ESP32 is powered on.</Text>
+      {devices.length === 0 && !isScanning && (
+        <Text style={styles.hint}>Make sure your ESP32 is powered on before starting search.</Text>
       )}
 
       <FlatList
@@ -56,16 +68,35 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 24, backgroundColor: '#0a0a0a' },
-  subtitle: { color: '#888888', fontSize: 15, marginBottom: 28 },
+  title: { color: '#ffffff', fontSize: 28, fontWeight: '800', marginBottom: 6 },
+  subtitle: { color: '#888888', fontSize: 15, marginBottom: 22 },
+  discoveryPanel: {
+    backgroundColor: '#141414',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#262626',
+  },
+  discoveryHeader: {
+    minHeight: 42,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+    marginBottom: 16,
+  },
+  discoveryTitle: { color: '#ffffff', fontSize: 17, fontWeight: '700' },
+  discoveryStatus: { color: '#888888', fontSize: 13, marginTop: 4 },
   scanButton: {
     backgroundColor: '#e8f542',
-    borderRadius: 14,
+    borderRadius: 10,
     paddingVertical: 16,
     alignItems: 'center',
-    marginBottom: 20,
   },
-  scanButtonActive: { backgroundColor: '#c8d530' },
+  scanButtonActive: { backgroundColor: '#242424', borderWidth: 1, borderColor: '#3a3a3a' },
   scanButtonText: { color: '#0a0a0a', fontSize: 16, fontWeight: '700' },
+  scanButtonActiveText: { color: '#e8f542' },
   hint: { color: '#555555', fontSize: 13, textAlign: 'center', marginTop: 16 },
   list: { marginTop: 12 },
   historyLink: { alignItems: 'center', paddingVertical: 20 },
