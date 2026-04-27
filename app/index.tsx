@@ -46,6 +46,10 @@ export default function HomeScreen() {
         <Text style={styles.hint}>Make sure your ESP32 is powered on before starting search.</Text>
       )}
 
+      {devices.length > 0 && (
+        <Text style={styles.listTitle}>Nearby BLE devices</Text>
+      )}
+
       <FlatList
         data={devices}
         keyExtractor={(device) => device.id}
@@ -98,6 +102,7 @@ const styles = StyleSheet.create({
   scanButtonText: { color: '#0a0a0a', fontSize: 16, fontWeight: '700' },
   scanButtonActiveText: { color: '#e8f542' },
   hint: { color: '#555555', fontSize: 13, textAlign: 'center', marginTop: 16 },
+  listTitle: { color: '#888888', fontSize: 13, fontWeight: '700', marginBottom: 10 },
   list: { marginTop: 12 },
   historyLink: { alignItems: 'center', paddingVertical: 20 },
   historyLinkText: { color: '#888888', fontSize: 14 },

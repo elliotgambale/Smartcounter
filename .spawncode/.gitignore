@@ -1,0 +1,16 @@
+# --- SpawnCode managed (begin) ---
+# SpawnCode project artifacts
+# Keep .spawncode/project.json tracked; ignore generated artifacts by default.
+# NOTE: This block is managed by SpawnCode and may be overwritten.
+!agents/
+!corpora/
+agents/*/agent/
+agents/*/workspace/
+agents/*/sessions/
+reports/
+corpora/*/docs/
+corpora/*/derived/
+corpora/*/dce/
+corpora.local.v1.json
+trash/
+# --- SpawnCode managed (end) ---

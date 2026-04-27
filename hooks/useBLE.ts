@@ -9,6 +9,8 @@ import {
   SMART_COUNTER_SERVICE_UUID,
 } from '../lib/bleConstants';
 
+const SMART_COUNTER_SERVICE_PREFIX = '4faf';
+
 const manager =
   Constants.appOwnership === 'expo'
     ? null
@@ -22,6 +24,33 @@ function requireManager() {
     throw new Error('BLE is unavailable in Expo Go. Use a native development build.');
   }
   return manager;
+}
+
+function hasSmartCounterService(device: Device) {
+  return device.serviceUUIDs?.some((uuid) =>
+    uuid.toLowerCase().startsWith(SMART_COUNTER_SERVICE_PREFIX)
+  ) ?? false;
+}
+
+function isSmartCounterDevice(device: Device) {
+  return (
+    device.name === DEVICE_NAME ||
+    device.localName === DEVICE_NAME ||
+    hasSmartCounterService(device)
+  );
+}
+
+function sortDevices(devices: Device[]) {
+  return [...devices].sort((a, b) => {
+    const aSmartCounter = isSmartCounterDevice(a);
+    const bSmartCounter = isSmartCounterDevice(b);
+
+    if (aSmartCounter !== bSmartCounter) {
+      return aSmartCounter ? -1 : 1;
+    }
+
+    return (b.rssi ?? -999) - (a.rssi ?? -999);
+  });
 }
 
 export function useBLE(onRepReceived: (rep: RepData) => void) {
@@ -71,23 +100,32 @@ export function useBLE(onRepReceived: (rep: RepData) => void) {
           id: device.id,
           name: device.name,
           localName: device.localName,
+          serviceUUIDs: device.serviceUUIDs,
           rssi: device.rssi,
         });
       }
 
-      if (
-        device &&
-        (device.name === DEVICE_NAME || device.localName === DEVICE_NAME)
-      ) {
-        console.log('[BLE] matched device', {
-          id: device.id,
-          name: device.name,
-          localName: device.localName,
-        });
+      if (device) {
         setDevices((prev) => {
-          const exists = prev.find((d) => d.id === device.id);
-          return exists ? prev : [...prev, device];
+          const existingIndex = prev.findIndex((d) => d.id === device.id);
+
+          if (existingIndex === -1) {
+            return sortDevices([...prev, device]);
+          }
+
+          const next = [...prev];
+          next[existingIndex] = device;
+          return sortDevices(next);
         });
+
+        if (isSmartCounterDevice(device)) {
+          console.log('[BLE] matched SmartCounter device', {
+            id: device.id,
+            name: device.name,
+            localName: device.localName,
+            serviceUUIDs: device.serviceUUIDs,
+          });
+        }
       }
     });
 
