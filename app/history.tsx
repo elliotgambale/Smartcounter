@@ -40,6 +40,7 @@ export default function HistoryScreen() {
         keyExtractor={(session) => session.id}
         renderItem={({ item }) => (
           <View style={styles.card}>
+            <Text style={styles.workoutName}>{item.workoutName ?? 'Workout'}</Text>
             <Text style={styles.date}>{item.date}</Text>
             <Text style={styles.stat}>
               {item.sets.length} sets | {item.totalReps} reps
@@ -69,6 +70,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#222222',
   },
+  workoutName: { color: '#ffffff', fontSize: 16, fontWeight: '700', marginBottom: 4 },
   date: { color: '#ffffff', fontSize: 15, fontWeight: '600', marginBottom: 4 },
   stat: { color: '#888888', fontSize: 13 },
   clearButton: { padding: 24, alignItems: 'center' },

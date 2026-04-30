@@ -15,6 +15,7 @@ export interface WorkoutSet {
 export interface WorkoutSession {
   id: string;
   date: string;
+  workoutName: string;
   sets: WorkoutSet[];
   totalReps: number;
 }

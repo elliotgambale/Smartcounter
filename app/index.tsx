@@ -62,10 +62,6 @@ export default function HomeScreen() {
       <TouchableOpacity style={styles.historyLink} onPress={() => router.push('/history')}>
         <Text style={styles.historyLinkText}>View session history</Text>
       </TouchableOpacity>
-
-      <TouchableOpacity style={styles.mockLink} onPress={() => router.push('/workout')}>
-        <Text style={styles.mockLinkText}>Open mock workout</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -106,6 +102,4 @@ const styles = StyleSheet.create({
   list: { marginTop: 12 },
   historyLink: { alignItems: 'center', paddingVertical: 20 },
   historyLinkText: { color: '#888888', fontSize: 14 },
-  mockLink: { alignItems: 'center', paddingBottom: 20 },
-  mockLinkText: { color: '#e8f542', fontSize: 14, fontWeight: '700' },
 });

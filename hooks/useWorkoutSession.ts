@@ -8,7 +8,7 @@ interface SessionState {
 }
 
 type Action =
-  | { type: 'START_SESSION' }
+  | { type: 'START_SESSION'; payload: { workoutName: string } }
   | { type: 'ADD_REP'; payload: RepData }
   | { type: 'END_SESSION' }
   | { type: 'RESET' };
@@ -25,6 +25,7 @@ function reducer(state: SessionState, action: Action): SessionState {
       const session: WorkoutSession = {
         id: Date.now().toString(),
         date: new Date().toLocaleDateString(),
+        workoutName: action.payload.workoutName,
         sets: [],
         totalReps: 0,
       };
@@ -83,7 +84,10 @@ function reducer(state: SessionState, action: Action): SessionState {
 export function useWorkoutSession() {
   const [state, dispatch] = useReducer(reducer, initialState);
 
-  const startSession = useCallback(() => dispatch({ type: 'START_SESSION' }), []);
+  const startSession = useCallback(
+    (workoutName: string) => dispatch({ type: 'START_SESSION', payload: { workoutName } }),
+    []
+  );
   const addRep = useCallback((rep: RepData) => dispatch({ type: 'ADD_REP', payload: rep }), []);
   const endSession = useCallback(() => dispatch({ type: 'END_SESSION' }), []);
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
