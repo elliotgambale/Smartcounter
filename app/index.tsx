@@ -2,11 +2,11 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import type { Device } from 'react-native-ble-plx';
 import { DeviceCard } from '../components/DeviceCard';
-import { useBLE } from '../hooks/useBLE';
+import { useBLEContext } from '../context/BLEContext';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { status, devices, startScan, stopScan, connectToDevice } = useBLE(() => {});
+  const { status, devices, startScan, stopScan, connectToDevice } = useBLEContext();
   const isScanning = status === 'scanning';
 
   const handleConnect = async (device: Device) => {

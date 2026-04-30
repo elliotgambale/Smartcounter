@@ -1,16 +1,17 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { FatigueChart } from '../components/FatigueChart';
 import { RepCounter } from '../components/RepCounter';
 import { SetTracker } from '../components/SetTracker';
-import { useBLE } from '../hooks/useBLE';
+import { useBLEContext } from '../context/BLEContext';
 import { useWorkoutSession } from '../hooks/useWorkoutSession';
 import { saveSession } from '../lib/storage';
 import { RepData } from '../lib/types';
 
 export default function WorkoutScreen() {
   const router = useRouter();
+  const { status, lastRep, debugLogs, disconnect } = useBLEContext();
   const {
     session,
     currentSet,
@@ -20,20 +21,20 @@ export default function WorkoutScreen() {
     endSession,
     reset,
   } = useWorkoutSession();
-
-  const handleRep = useCallback(
-    (rep: RepData) => {
-      if (!session) startSession();
-      addRep(rep);
-    },
-    [addRep, session, startSession]
-  );
-
-  const { status, disconnect } = useBLE(handleRep);
+  const handledRepRef = useRef<RepData | null>(lastRep);
 
   useEffect(() => {
     startSession();
   }, [startSession]);
+
+  useEffect(() => {
+    if (!lastRep || handledRepRef.current === lastRep) return;
+
+    handledRepRef.current = lastRep;
+    console.log('[SmartCounter Workout] adding BLE rep to session', lastRep);
+    if (!session) startSession();
+    addRep(lastRep);
+  }, [addRep, lastRep, session, startSession]);
 
   const handleEnd = async () => {
     endSession();
@@ -63,7 +64,8 @@ export default function WorkoutScreen() {
       durationMs: Math.round(1200 + Math.random() * 800),
       timestamp: Date.now(),
     };
-    handleRep(rep);
+    if (!session) startSession();
+    addRep(rep);
   };
 
   const currentReps = currentSet?.reps.length ?? 0;
@@ -74,8 +76,10 @@ export default function WorkoutScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.statusRow}>
-        <View style={[styles.dot, status === 'connected' ? styles.dotGreen : styles.dotRed]} />
-        <Text style={styles.statusText}>{status === 'connected' ? 'Connected' : status}</Text>
+        <View style={[styles.dot, status === 'connected' ? styles.dotGreen : styles.dotYellow]} />
+        <Text style={styles.statusText}>
+          {status === 'connected' ? 'ESP32 connected' : 'Mock mode - no hardware'}
+        </Text>
       </View>
 
       <RepCounter reps={currentReps} lastDurationMs={lastRepDuration} />
@@ -86,6 +90,19 @@ export default function WorkoutScreen() {
       </TouchableOpacity>
 
       <FatigueChart sets={chartSets} />
+
+      <View style={styles.debugPanel}>
+        <Text style={styles.debugTitle}>BLE logs</Text>
+        {debugLogs.length === 0 ? (
+          <Text style={styles.debugLine}>No BLE packets logged yet.</Text>
+        ) : (
+          debugLogs.slice(0, 8).map((line, index) => (
+            <Text key={`${index}-${line}`} style={styles.debugLine}>
+              {line}
+            </Text>
+          ))
+        )}
+      </View>
 
       <TouchableOpacity style={styles.endButton} onPress={handleEnd}>
         <Text style={styles.endButtonText}>End session</Text>
@@ -100,7 +117,7 @@ const styles = StyleSheet.create({
   statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 32 },
   dot: { width: 8, height: 8, borderRadius: 4, marginRight: 8 },
   dotGreen: { backgroundColor: '#4ade80' },
-  dotRed: { backgroundColor: '#f87171' },
+  dotYellow: { backgroundColor: '#facc15' },
   statusText: { color: '#888888', fontSize: 13 },
   mockButton: {
     backgroundColor: '#242424',
@@ -112,6 +129,17 @@ const styles = StyleSheet.create({
     borderColor: '#333333',
   },
   mockButtonText: { color: '#e8f542', fontSize: 14, fontWeight: '700' },
+  debugPanel: {
+    backgroundColor: '#111111',
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+    marginTop: 4,
+    marginBottom: 20,
+  },
+  debugTitle: { color: '#ffffff', fontSize: 13, fontWeight: '700', marginBottom: 8 },
+  debugLine: { color: '#9ca3af', fontSize: 11, lineHeight: 16, marginBottom: 5 },
   endButton: {
     marginTop: 20,
     borderWidth: 1,

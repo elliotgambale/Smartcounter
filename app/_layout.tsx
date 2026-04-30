@@ -1,9 +1,10 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { BLEProvider } from '../context/BLEContext';
 
 export default function RootLayout() {
   return (
-    <>
+    <BLEProvider>
       <StatusBar style="light" />
       <Stack
         screenOptions={{
@@ -17,6 +18,6 @@ export default function RootLayout() {
         <Stack.Screen name="workout" options={{ title: 'Live Workout' }} />
         <Stack.Screen name="history" options={{ title: 'Session History' }} />
       </Stack>
-    </>
+    </BLEProvider>
   );
 }
