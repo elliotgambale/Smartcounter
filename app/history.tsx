@@ -45,6 +45,11 @@ export default function HistoryScreen() {
             <Text style={styles.stat}>
               {item.sets.length} sets | {item.totalReps} reps
             </Text>
+            {item.sets.map((set) => (
+              <Text key={`${item.id}-${set.setNumber}`} style={styles.setLine}>
+                Set {set.setNumber}: {set.exerciseName ?? 'Exercise'} | {set.reps.length} reps
+              </Text>
+            ))}
           </View>
         )}
         contentContainerStyle={styles.listContent}
@@ -73,6 +78,7 @@ const styles = StyleSheet.create({
   workoutName: { color: '#ffffff', fontSize: 16, fontWeight: '700', marginBottom: 4 },
   date: { color: '#ffffff', fontSize: 15, fontWeight: '600', marginBottom: 4 },
   stat: { color: '#888888', fontSize: 13 },
+  setLine: { color: '#c7c7c7', fontSize: 13, lineHeight: 20, marginTop: 6 },
   clearButton: { padding: 24, alignItems: 'center' },
   clearText: { color: '#f87171', fontSize: 14 },
 });

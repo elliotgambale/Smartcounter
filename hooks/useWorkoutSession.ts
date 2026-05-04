@@ -9,8 +9,9 @@ interface SessionState {
 
 type Action =
   | { type: 'START_SESSION'; payload: { workoutName: string } }
+  | { type: 'START_SET'; payload: { exerciseName: string } }
   | { type: 'ADD_REP'; payload: RepData }
-  | { type: 'END_SESSION' }
+  | { type: 'FINISH_SET' }
   | { type: 'RESET' };
 
 const initialState: SessionState = {
@@ -31,23 +32,27 @@ function reducer(state: SessionState, action: Action): SessionState {
       };
       return { ...initialState, session };
     }
-    case 'ADD_REP': {
-      const rep = action.payload;
+    case 'START_SET': {
       if (!state.session) return state;
 
-      let completedSets = state.session.sets;
-      let currentSet = state.currentSet;
+      return {
+        ...state,
+        currentSet: {
+          setNumber: state.session.sets.length + 1,
+          exerciseName: action.payload.exerciseName,
+          reps: [],
+          startTime: Date.now(),
+        },
+        lastRepDuration: null,
+      };
+    }
+    case 'ADD_REP': {
+      const rep = action.payload;
+      if (!state.session || !state.currentSet) return state;
 
-      if (!currentSet || currentSet.setNumber !== rep.set) {
-        if (currentSet) {
-          completedSets = [...completedSets, { ...currentSet, endTime: Date.now() }];
-        }
-        currentSet = { setNumber: rep.set, reps: [], startTime: Date.now() };
-      }
-
-      currentSet = {
-        ...currentSet,
-        reps: [...currentSet.reps, rep],
+      const currentSet = {
+        ...state.currentSet,
+        reps: [...state.currentSet.reps, rep],
       };
 
       return {
@@ -56,22 +61,27 @@ function reducer(state: SessionState, action: Action): SessionState {
         lastRepDuration: rep.durationMs,
         session: {
           ...state.session,
-          sets: completedSets,
           totalReps: state.session.totalReps + 1,
         },
       };
     }
-    case 'END_SESSION': {
-      if (!state.session) return state;
+    case 'FINISH_SET': {
+      if (!state.session || !state.currentSet) return state;
 
-      const sets = state.currentSet
-        ? [...state.session.sets, { ...state.currentSet, endTime: Date.now() }]
-        : state.session.sets;
+      const completedSet = { ...state.currentSet, endTime: Date.now() };
+      const sets =
+        completedSet.reps.length > 0 ? [...state.session.sets, completedSet] : state.session.sets;
 
       return {
         ...state,
         session: { ...state.session, sets },
-        currentSet: null,
+        currentSet: {
+          setNumber: sets.length + 1,
+          exerciseName: state.currentSet.exerciseName,
+          reps: [],
+          startTime: Date.now(),
+        },
+        lastRepDuration: null,
       };
     }
     case 'RESET':
@@ -88,9 +98,13 @@ export function useWorkoutSession() {
     (workoutName: string) => dispatch({ type: 'START_SESSION', payload: { workoutName } }),
     []
   );
+  const startSet = useCallback(
+    (exerciseName: string) => dispatch({ type: 'START_SET', payload: { exerciseName } }),
+    []
+  );
   const addRep = useCallback((rep: RepData) => dispatch({ type: 'ADD_REP', payload: rep }), []);
-  const endSession = useCallback(() => dispatch({ type: 'END_SESSION' }), []);
+  const finishSet = useCallback(() => dispatch({ type: 'FINISH_SET' }), []);
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  return { ...state, startSession, addRep, endSession, reset };
+  return { ...state, startSession, startSet, addRep, finishSet, reset };
 }

@@ -7,6 +7,7 @@ export interface RepData {
 
 export interface WorkoutSet {
   setNumber: number;
+  exerciseName: string;
   reps: RepData[];
   startTime: number;
   endTime?: number;
